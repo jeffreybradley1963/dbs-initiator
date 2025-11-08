@@ -1,0 +1,16 @@
+[project]
+name = "obs-scene-generator"
+version = "0.1.0"
+dependencies = [
+    "requests",
+    "obsws-python",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "requests-mock",
+]
+
+[tool.setuptools]
+py-modules = ["bible_utils", "config", "obs_automator", "obs_scene_generator"]
