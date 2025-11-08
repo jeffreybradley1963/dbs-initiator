@@ -29,3 +29,22 @@ BIBLE_BOOK_IDS = {
     "Philemon": "PHM", "Hebrews": "HEB", "James": "JAS", "1 Peter": "1PE", "2 Peter": "2PE",
     "1 John": "1JN", "2 John": "2JN", "3 John": "3JN", "Jude": "JUD", "Revelation": "REV"
 }
+
+# Maps common abbreviations to the canonical book name used in BIBLE_BOOK_IDS
+BOOK_ABBREVIATIONS = {
+    "gen": "Genesis", "ex": "Exodus", "lev": "Leviticus", "num": "Numbers", "deut": "Deuteronomy",
+    "josh": "Joshua", "judg": "Judges", "ruth": "Ruth", "1 sam": "1 Samuel", "2 sam": "2 Samuel",
+    "1 kgs": "1 Kings", "2 kgs": "2 Kings", "1 chr": "1 Chronicles", "2 chr": "2 Chronicles",
+    "ezra": "Ezra", "neh": "Nehemiah", "esth": "Esther", "job": "Job", "ps": "Psalms",
+    "prov": "Proverbs", "eccl": "Ecclesiastes", "song": "Song of Songs", "isa": "Isaiah",
+    "jer": "Jeremiah", "lam": "Lamentations", "ezek": "Ezekiel", "dan": "Daniel", "hos": "Hosea",
+    "joel": "Joel", "amos": "Amos", "obad": "Obadiah", "jonah": "Jonah", "mic": "Micah",
+    "nah": "Nahum", "hab": "Habakkuk", "zeph": "Zephaniah", "hag": "Haggai", "zech": "Zechariah",
+    "mal": "Malachi", "matt": "Matthew", "mark": "Mark", "luke": "Luke", "john": "John",
+    "acts": "Acts", "rom": "Romans", "1 cor": "1 Corinthians", "2 cor": "2 Corinthians",
+    "gal": "Galatians", "eph": "Ephesians", "phil": "Philippians", "col": "Colossians",
+    "1 thess": "1 Thessalonians", "2 thess": "2 Thessalonians", "1 tim": "1 Timothy",
+    "2 tim": "2 Timothy", "titus": "Titus", "philem": "Philemon", "heb": "Hebrews",
+    "james": "James", "1 pet": "1 Peter", "2 pet": "2 Peter", "1 jn": "1 John", "2 jn": "2 John",
+    "3 jn": "3 John", "jude": "Jude", "rev": "Revelation"
+}

@@ -1,0 +1,4 @@
+bible_utils
+config
+obs_automator
+obs_scene_generator

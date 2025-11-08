@@ -1,6 +1,6 @@
 import requests
 import re
-from config import API_BASE_URL, BIBLE_BOOK_IDS, MAX_CHARS_PER_LINE
+from config import API_BASE_URL, BIBLE_BOOK_IDS, MAX_CHARS_PER_LINE, BOOK_ABBREVIATIONS
 
 # --- BIBLE API AND PARSING FUNCTIONS ---
 
@@ -14,6 +14,7 @@ def to_title_case(s):
 def parse_reference(reference):
     """Parses a scripture reference string into a structured object."""
     normalized_ref = reference.lower().replace('.', '')
+    normalized_ref = reference.lower().strip().replace('.', '')
 
     # Regex to capture Book (with optional number), Chapter, Start Verse, and optional End Verse
     match = re.match(r"^(\d?\s*[a-z]+)\s*(\d+):(\d+)(?:-(\d+))?$", normalized_ref)
@@ -24,6 +25,11 @@ def parse_reference(reference):
     book_part, chapter_str, start_verse_str, end_verse_str = match.groups()
 
     book = to_title_case(book_part.strip())
+    # Look up the abbreviation. If not found, assume it's already the full name.
+    book_key = book_part.strip()
+    canonical_book_name = BOOK_ABBREVIATIONS.get(book_key)
+    
+    book = to_title_case(canonical_book_name or book_key)
     chapter = int(chapter_str)
     start_verse = int(start_verse_str)
     end_verse = int(end_verse_str) if end_verse_str else start_verse
