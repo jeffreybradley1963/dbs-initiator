@@ -22,9 +22,13 @@ fi
 
 echo "Running the OBS Scene Generator..."
 
-# Find the directory where this script is located to reliably call the python script.
-# This makes the script portable, so it works in any directory.
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+# Find the directory where the script *actually* lives, resolving any symbolic links.
+# This is crucial for finding the python script and virtual environment.
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # Resolve $SOURCE until the file is no longer a symlink
+  SOURCE="$(readlink "$SOURCE")"
+done
+SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
 # --- PYTHON VIRTUAL ENVIRONMENT ACTIVATION ---
 # Assumes the virtual environment is in a 'venv' directory alongside the scripts.
