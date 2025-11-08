@@ -1,5 +1,7 @@
 # OBS Scripture Scene Generator
 
+[![Python CI](https://github.com/jeffrey-bradley/dbs-initiator/actions/workflows/python-ci.yml/badge.svg)](https://github.com/jeffrey-bradley/dbs-initiator/actions/workflows/python-ci.yml)
+
 A Python script to automatically generate scenes in OBS Studio for displaying scripture verses, fetched from a public Bible API.
 
 This tool is designed for streamers, content creators, and church media teams who want to quickly create a series of OBS scenes from a scripture passage, with each verse in its own scene, based on a master template.
@@ -88,20 +90,22 @@ SCROLLING_TEXT_SOURCE_NAME = "sTextScrolling"
 
 Make sure these names exactly match the names you used in OBS.
 
-## Usage
+## Workflow
 
-The script requires your OBS WebSocket connection details and the scripture reference you want to generate.
+The intended workflow is simple and safe, ensuring your original templates are never modified.
+
+1.  **In OBS, duplicate your master template collection.** For example, right-click your `My-Study-Template` collection and duplicate it.
+2.  **Name the new collection.** Give it a name for your new study, like `John-3-Study`.
+3.  **Switch to the new collection.** Make sure `John-3-Study` is the active scene collection in OBS.
+4.  **Run the script.** The script will add all the generated scripture scenes to this new, active collection.
+
+This process ensures your original template remains clean and untouched for future use.
+
+## Running the Script
 
 ### Connection Details
 
 It's recommended to set your OBS connection details as environment variables so you don't have to enter them every time.
-
-**On Windows (Command Prompt):**
-```cmd
-set OBS_HOST=localhost
-set OBS_PORT=4455
-set OBS_PASSWORD=your_password
-```
 
 **On macOS/Linux:**
 ```bash
