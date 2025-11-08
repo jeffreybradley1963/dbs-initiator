@@ -11,7 +11,6 @@ This tool is designed for streamers, content creators, and church media teams wh
 - **Independent Sources**: Each generated scene gets its own unique text source, so you can edit one verse's text without affecting others.
 - **Full Scene Duplication**: Copies all elements from your template scene (backgrounds, overlays, cameras, etc.) into each new scene.
 - **Preserves Layout**: The position, transform, and styling of the template's text source are applied to each new scene's text source.
-- **Scene Collection Management**: Automatically switches to a template collection, creates the scenes, saves them in a new, timestamped collection, and switches back to your original collection, leaving your workspace clean.
 
 ## Prerequisites
 
@@ -61,10 +60,10 @@ The script requires a specific setup in OBS to function correctly.
 
 2.  **Create a Template Scene Collection**:
     - In OBS, go to **Scene Collection -> New**.
-    - Name this collection something like `Scripture-Templates`. This name must match the `TEMPLATE_SCENE_COLLECTION_NAME` variable in the script.
+    - Name this collection something like `My-Study-Template`.
 
 3.  **Create a Template Scene**:
-    - Within your new `Scripture-Templates` collection, create a new scene.
+    - Within your new template collection, create a new scene.
     - Name it `Scripture-Template`. This name must match the `TEMPLATE_SCENE_NAME` variable in the script.
 
 4.  **Design Your Template Scene**:
@@ -77,18 +76,11 @@ The script requires a specific setup in OBS to function correctly.
 
 ### 4. Configure the Script
 
-Open `obs_scene_generator.py` and review the configuration constants at the top of the file.
+Open `config.py` and review the configuration constants at the top of the file.
 
 ```python
-# --- CONFIGURATION & BIBLE DATA ---
-
-# ...
-
 # ID of the scene you have already created in OBS that will be duplicated.
 TEMPLATE_SCENE_NAME = "Scripture-Template"
-
-# The scene collection containing your template scene
-TEMPLATE_SCENE_COLLECTION_NAME = "Scripture-Templates" # On first run, I used "Daily-Template"
 
 # Use the name you gave the scrolling text source
 SCROLLING_TEXT_SOURCE_NAME = "sTextScrolling"
@@ -155,4 +147,3 @@ Contributions are welcome! Please feel free to fork the repository, make your ch
 ## License
 
 This project is licensed under the MIT License. See the `LICENSE` file for details.
-

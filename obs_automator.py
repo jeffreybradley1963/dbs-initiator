@@ -1,24 +1,12 @@
 from obsws_python import ReqClient
 from config import TEMPLATE_SCENE_NAME, SCROLLING_TEXT_SOURCE_NAME
 
-def automate_scene_generation(verses, host, port, password):
-    """Connects to OBS and automates scene creation and modification."""
-    print("Connecting to OBS WebSocket...")
+def automate_scene_generation(client, verses):
+    """
+    Automates scene creation and modification in the currently active scene collection.
+    """
+    print("\nStarting scene generation process...")
     try:
-        # Initialize the client
-        # The ReqClient constructor handles the connection.
-        client = ReqClient(host=host, port=port, password=password, timeout=5)
-
-    except Exception as e:
-        print(f"ERROR: Could not connect to OBS. Ensure OBS is running, the WebSocket Server is enabled (under Tools), and the connection details are correct. Details: {e}")
-        return
-
-    print("Successfully connected to OBS.")
-    try:
-        # Get all scenes to check for existing scenes
-        scenes_response = client.get_scene_list()
-        all_scenes = scenes_response.scenes
-
         # Get settings of the template scrolling text source
         template_source_settings_response = client.get_input_settings(SCROLLING_TEXT_SOURCE_NAME)
         template_source_settings = template_source_settings_response.input_settings
@@ -28,9 +16,11 @@ def automate_scene_generation(verses, host, port, password):
         template_scene_items_response = client.get_scene_item_list(TEMPLATE_SCENE_NAME)
         template_scene_items = template_scene_items_response.scene_items
 
+        scenes_response = client.get_scene_list()
+        all_scenes = scenes_response.scenes
         print(f"Attempting to create scenes and inject text based on '{TEMPLATE_SCENE_NAME}'...")
 
-        for verse in verses:
+        for verse in reversed(verses):
             new_scene_name = verse['scene_name']
             # Create a unique source name for each verse's text source
             unique_source_name = f"{SCROLLING_TEXT_SOURCE_NAME}_{verse['reference'].replace(' ', '_').replace(':', '-')}"
@@ -104,7 +94,3 @@ def automate_scene_generation(verses, host, port, password):
             print(f"Copied source and injected scripture text for {verse['reference']}")
     except Exception as e:
         print(f"OBS Automation Error: {e}")
-    finally: # The client automatically disconnects when the 'with' block is exited, but explicit is fine.
-        # The new client doesn't have a disconnect method in the same way. It's handled by context management or garbage collection.
-        client.disconnect()
-        print("Disconnected from OBS.")

@@ -10,7 +10,6 @@ MAX_CHARS_PER_LINE = 50
 # ID of the scene you have already created in OBS that will be duplicated.
 # This scene MUST contain a Text (FreeType 2) source named 'SCROLLING_TEXT_SOURCE_NAME'.
 TEMPLATE_SCENE_NAME = "Scripture-Template"
-TEMPLATE_SCENE_COLLECTION_NAME = "Daily-Template" # The scene collection containing your template scene
 SCROLLING_TEXT_SOURCE_NAME = "sTextScrolling" # Use the name you gave the scrolling text source
 
 # Your BIBLE_BOOK_IDS map (taken from your Apps Script)
