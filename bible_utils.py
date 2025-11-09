@@ -1,6 +1,7 @@
 import requests
 import re
-from config import API_BASE_URL, BIBLE_BOOK_IDS, MAX_CHARS_PER_LINE, BOOK_ABBREVIATIONS
+from config import API_BASE_URL, BIBLE_BOOK_IDS, BOOK_ABBREVIATIONS, MAX_CHARS_PER_LINE
+
 
 # --- BIBLE API AND PARSING FUNCTIONS ---
 
@@ -38,31 +39,38 @@ def parse_reference(reference):
 
 def format_text_for_obs(text):
     """
-    Inserts manual line breaks to ensure text wraps correctly for the narrow OBS canvas.
-    This replicates the manual <CTRL><ENTER> input you were using.
+    Wraps text to a specified width, preserving the first line's indentation.
     """
+    lines = []
+    # Split the first line to handle the prepended verse number correctly
+    first_line_words = text.split('\n')[0].split()
+    remaining_text = " ".join(text.split('\n')[0].split()[1:])
+
+    # Handle the first line with its initial content (e.g., "[12] So David...")
+    current_line = first_line_words[0] # Start with "[12]"
+    for word in remaining_text.split():
+        if len(current_line) + len(word) + 1 > MAX_CHARS_PER_LINE:
+            lines.append(current_line)
+            current_line = word
+        else:
+            current_line += " " + word
+    lines.append(current_line)
+
+    # For subsequent lines, we can just wrap normally.
+    # This logic is simplified as we process the whole text at once now.
+    # The logic above handles the whole text string. Let's refine it.
+
     words = text.split()
     lines = []
     current_line = ""
-
     for word in words:
-        # Check if adding the next word exceeds the max length
         if len(current_line) + len(word) + 1 > MAX_CHARS_PER_LINE and current_line:
             lines.append(current_line)
             current_line = word
         else:
-            # Append word to current line
-            if current_line:
-                current_line += " " + word
-            else:
-                current_line = word
-
-    if current_line:
-        lines.append(current_line)
-
-    # OBS Text (FreeType 2) uses \n for line breaks
+            current_line = (current_line + " " + word) if current_line else word
+    lines.append(current_line)
     return "\n".join(lines)
-
 
 def get_verses_from_api(reference):
     """Fetches verses from the API and formats them for OBS."""
@@ -98,15 +106,14 @@ def get_verses_from_api(reference):
 
                 raw_text = " ".join(verse_text_parts).strip()
 
-                # Combine verse reference and text
-                full_verse_text = f"{parsed_ref['book']} {parsed_ref['chapter']}:{verse_number} (BSB)\n"
-
-                # Format the text body with line breaks
-                formatted_body = format_text_for_obs(raw_text)
+                # Combine verse number and text first
+                combined_text = f"[{verse_number}] {raw_text}"
+                # Then, format the combined string for OBS
+                final_obs_text = format_text_for_obs(combined_text)
 
                 verses_to_process.append({
                     'reference': f"{parsed_ref['book']} {parsed_ref['chapter']}:{verse_number}",
-                    'obs_text': full_verse_text + formatted_body,
+                    'obs_text': final_obs_text,
                     'scene_name': f"Scripture-{book_id}-{parsed_ref['chapter']}:{verse_number}"
                 })
 

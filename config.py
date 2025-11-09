@@ -5,7 +5,7 @@ API_BASE_URL = "https://bible.helloao.org/api/BSB"
 
 # Max characters per line for your 1080x1920 vertical format
 # This should be adjusted based on your chosen font size (e.g., 40-55 characters)
-MAX_CHARS_PER_LINE = 50
+MAX_CHARS_PER_LINE = 20
 
 # ID of the scene you have already created in OBS that will be duplicated.
 # This scene MUST contain a Text (FreeType 2) source named 'SCROLLING_TEXT_SOURCE_NAME'.
