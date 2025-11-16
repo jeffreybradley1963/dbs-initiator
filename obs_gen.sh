@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# --- OBS STUDIO LAUNCHER & SCENE GENERATOR ---
+# --- OBS STUDIO LAUNCHER & DBS-INITIATOR ---
 # This script checks if OBS Studio is running. If not, it starts it
-# before running the scene generator Python script.
+# before running the dbs-initiator application.
 
 # The name of the OBS executable. This might be 'obs' or 'obs-studio'.
-# 'pgrep -x' checks for an exact match.
+# 'pgrep -x' checks for an exact match of the process name.
 OBS_PROCESS_NAME="obs"
 
 echo "Checking if OBS Studio is running..."
@@ -20,26 +20,19 @@ else
     echo "OBS Studio is already running."
 fi
 
-echo "Running the OBS Scene Generator..."
+echo "Running the dbs-initiator application..."
 
-# Find the directory where the script *actually* lives, resolving any symbolic links.
-# This is crucial for finding the python script and virtual environment.
+# Find the directory where the script lives to locate the executable.
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # Resolve $SOURCE until the file is no longer a symlink
   SOURCE="$(readlink "$SOURCE")"
 done
 SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
-# --- PYTHON VIRTUAL ENVIRONMENT ACTIVATION ---
-# Assumes the virtual environment is in a 'venv' directory alongside the scripts.
-VENV_PATH="$SCRIPT_DIR/venv/bin/activate"
-if [ -f "$VENV_PATH" ]; then
-    echo "Activating Python virtual environment..."
-    source "$VENV_PATH"
-else
-    echo "Warning: Python virtual environment not found at '$VENV_PATH'."
-    echo "Proceeding with system Python. This may fail if packages are not installed globally."
-fi
+# --- APPLICATION EXECUTION ---
+# Assumes the 'dbs-initiator' executable is in the same directory as this script.
+# The executable is created by running 'go build' in the project root.
+EXECUTABLE_PATH="$SCRIPT_DIR/dbs-initiator"
 
-# --- SCRIPT EXECUTION ---
-python3 "$SCRIPT_DIR/obs_scene_generator.py" "$@"
+# Pass all command-line arguments from this script directly to the Go application.
+"$EXECUTABLE_PATH" "$@"
