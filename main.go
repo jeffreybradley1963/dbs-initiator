@@ -52,7 +52,11 @@ func processScripture(ctx context.Context, refStr string) error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to OBS: %w", err)
 	}
-	defer obsClient.Disconnect()
+	defer func() {
+		if err := obsClient.Disconnect(); err != nil {
+			log.Printf("Warning: failed to disconnect from OBS: %v", err)
+		}
+	}()
 
 	// 5. Create individual verse scenes in OBS.
 	// We loop backwards to ensure scenes are created in the correct order in the OBS UI.
@@ -121,7 +125,10 @@ func processScripture(ctx context.Context, refStr string) error {
 
 		// 7c. Create the image scene in OBS, pointing to the new file.
 		log.Printf("Creating OBS image scene for '%s'...", prompt.Description)
-		obsClient.CreateImageScene(prompt.Description, absImageFilePath)
+		err = obsClient.CreateImageScene(prompt.Description, absImageFilePath)
+		if err != nil {
+			log.Printf("Warning: could not create OBS image scene for '%s': %v", prompt.Description, err)
+		}
 	}
 
 	return nil

@@ -3,6 +3,8 @@ package obs
 import "testing"
 
 // mockOBSClient is a mock implementation of our OBSClient interface for testing.
+//
+//lint:ignore U1000 we will use this mock for future tests
 type mockOBSClient struct {
 	// We can add fields here to track calls and assert behavior.
 	// For example:

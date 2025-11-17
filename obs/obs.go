@@ -129,9 +129,12 @@ func (c *clientImpl) createSceneFromTemplate(sceneName, templateSceneName, templ
 func (c *clientImpl) SetCurrentScene(sceneName string) {
 	if sceneName != "" {
 		log.Printf("Setting '%s' as the active scene.", sceneName)
-		c.Scenes.SetCurrentProgramScene(&scenes.SetCurrentProgramSceneParams{
+		_, err := c.Scenes.SetCurrentProgramScene(&scenes.SetCurrentProgramSceneParams{
 			SceneName: &sceneName,
 		})
+		if err != nil {
+			log.Printf("Warning: could not set current scene to '%s': %v", sceneName, err)
+		}
 	}
 }
 
