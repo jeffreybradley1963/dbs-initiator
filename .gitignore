@@ -1,8 +1,12 @@
 # Python
 __pycache__/
+*.egg-info/
 *.pyc
 *.pyo
 *.pyd
+
+# Pytest
+.pytest_cache/
 
 # Virtual environment
 venv/
@@ -12,3 +16,14 @@ venv/
 # IDE/Editor specific
 .vscode/
 .idea/
+
+# Go build artifacts
+# Compiled executable
+dbs-initiator
+dbs-initiator.exe
+
+# Test coverage files
+*.out
+
+# Generated output files
+output/
