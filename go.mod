@@ -1,5 +1,7 @@
 module github.com/jeffreybradley1963/dbs-initiator
 
+// cache-buster-v1
+
 go 1.23.0
 
 replace github.com/jeffreybradley1963/dbs-initiator => .
