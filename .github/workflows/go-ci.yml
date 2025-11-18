@@ -26,8 +26,8 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.23' # Match the version in go.mod
-          cache: true # Enable caching for faster builds
-          cache-dependency-path: go.sum # Explicitly set the path to invalidate the cache
+          # cache: true # Enable caching for faster builds
+          # cache-dependency-path: go.sum # Explicitly set the path to invalidate the cache
 
       # 3. Run the linter to check for style and common errors
       - name: Run linter
