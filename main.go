@@ -11,25 +11,135 @@ import (
 	"github.com/jeffreybradley1963/dbs-initiator/bible"
 	"github.com/jeffreybradley1963/dbs-initiator/gemini"
 	"github.com/jeffreybradley1963/dbs-initiator/obs"
+	"github.com/jeffreybradley1963/dbs-initiator/planner"
 )
 
 // --- Main Application Logic ---
 
 func main() {
-	// 1. Get scripture reference from command-line arguments.
 	if len(os.Args) < 2 {
-		log.Fatal("Please provide a scripture reference, e.g., \"John 3:16-17\"")
+		printUsage()
+		os.Exit(1)
 	}
-	scriptureRefStr := os.Args[1]
-	log.Printf("Processing reference: %s", scriptureRefStr)
 
-	// --- CORE WORKFLOW ---
-	err := processScripture(context.Background(), scriptureRefStr)
+	command := os.Args[1]
+
+	if command == "plan" {
+		handlePlanCommand()
+	} else {
+		// Assume it's a scripture reference (legacy mode)
+		scriptureRefStr := strings.Join(os.Args[1:], " ")
+		log.Printf("Processing reference: %s", scriptureRefStr)
+
+		// --- CORE WORKFLOW ---
+		err := processScripture(context.Background(), scriptureRefStr)
+		if err != nil {
+			log.Fatalf("Failed to process scripture: %v", err)
+		}
+
+		// Update status in planner if it exists
+		updatePlannerStatus(scriptureRefStr, planner.StatusProcessed)
+
+		log.Println("Successfully generated all scenes and images in OBS.")
+	}
+}
+
+func printUsage() {
+	fmt.Println("Usage:")
+	fmt.Println("  dbs-initiator <scripture reference>       Process a scripture reference")
+	fmt.Println("  dbs-initiator plan add <reference>        Add a reference to the plan")
+	fmt.Println("  dbs-initiator plan list                   List all items in the plan")
+	fmt.Println("  dbs-initiator plan next                   Process the next pending item")
+	fmt.Println("  dbs-initiator plan mark <ref> complete    Mark a reference as complete")
+}
+
+func handlePlanCommand() {
+	if len(os.Args) < 3 {
+		printUsage()
+		os.Exit(1)
+	}
+
+	plan, err := planner.Load()
 	if err != nil {
-		log.Fatalf("Failed to process scripture: %v", err)
+		log.Fatalf("Failed to load plan: %v", err)
 	}
 
-	log.Println("Successfully generated all scenes and images in OBS.")
+	subCommand := os.Args[2]
+
+	switch subCommand {
+	case "add":
+		if len(os.Args) < 4 {
+			log.Fatal("Please provide a reference to add")
+		}
+		ref := strings.Join(os.Args[3:], " ")
+		if err := plan.Add(ref); err != nil {
+			log.Fatalf("Failed to add item: %v", err)
+		}
+		fmt.Printf("Added '%s' to plan.\n", ref)
+
+	case "list":
+		items := plan.List()
+		if len(items) == 0 {
+			fmt.Println("Plan is empty.")
+			return
+		}
+		fmt.Printf("%-30s %-15s %s\n", "Reference", "Status", "Created At")
+		fmt.Println(strings.Repeat("-", 60))
+		for _, item := range items {
+			fmt.Printf("%-30s %-15s %s\n", item.Reference, item.Status, item.CreatedAt.Format("2006-01-02 15:04"))
+		}
+
+	case "next":
+		next := plan.GetNextPending()
+		if next == nil {
+			fmt.Println("No pending items in plan.")
+			return
+		}
+		fmt.Printf("Processing next pending item: %s\n", next.Reference)
+		err := processScripture(context.Background(), next.Reference)
+		if err != nil {
+			log.Fatalf("Failed to process scripture: %v", err)
+		}
+		// Update status to Processed
+		if err := plan.UpdateStatus(next.Reference, planner.StatusProcessed); err != nil {
+			log.Printf("Warning: Failed to update status for %s: %v", next.Reference, err)
+		}
+		log.Println("Successfully generated all scenes and images in OBS.")
+
+	case "mark":
+		if len(os.Args) < 5 || os.Args[4] != "complete" {
+			log.Fatal("Usage: dbs-initiator plan mark <ref> complete")
+		}
+		ref := os.Args[3]
+		if err := plan.UpdateStatus(ref, planner.StatusComplete); err != nil {
+			log.Fatalf("Failed to mark item as complete: %v", err)
+		}
+		fmt.Printf("Marked '%s' as Complete.\n", ref)
+
+	default:
+		printUsage()
+		os.Exit(1)
+	}
+}
+
+func updatePlannerStatus(ref string, status planner.Status) {
+	plan, err := planner.Load()
+	if err != nil {
+		return
+	}
+	if err := plan.UpdateStatus(ref, status); err == nil {
+		log.Printf("Updated status of '%s' to %s in plan.", ref, status)
+	}
+}
+
+func updatePlannerTitle(ref string, title string) {
+	plan, err := planner.Load()
+	if err != nil {
+		return
+	}
+	if err := plan.UpdateTitle(ref, title); err == nil {
+		log.Printf("Updated title of '%s' to '%s' in plan.", ref, title)
+	}
 }
 
 // processScripture is the main orchestrator function.
@@ -42,10 +152,12 @@ func processScripture(ctx context.Context, refStr string) error {
 	log.Printf("Parsed reference: %+v", reference) // Print the parsed struct for verification
 
 	// 3. Fetch the full scripture text from the Bible API.
-	verses, rawText, err := bible.FetchVerses(reference)
+	verses, rawText, title, err := bible.FetchVerses(reference)
 	if err != nil {
 		return fmt.Errorf("could not retrieve scripture text: %w", err)
 	}
+	log.Printf("Found title: %s", title)
+	updatePlannerTitle(refStr, title)
 
 	// 4. Connect to OBS.
 	obsClient, err := obs.Connect()
@@ -57,6 +169,16 @@ func processScripture(ctx context.Context, refStr string) error {
 			log.Printf("Warning: failed to disconnect from OBS: %v", err)
 		}
 	}()
+
+	// Update Base Layer text sources
+	if title != "" {
+		if err := obsClient.UpdateTextInput("Title", title); err != nil {
+			log.Printf("Warning: could not update Title source: %v", err)
+		}
+	}
+	if err := obsClient.UpdateTextInput("ScriptureReference", refStr); err != nil {
+		log.Printf("Warning: could not update ScriptureReference source: %v", err)
+	}
 
 	// 5. Create individual verse scenes in OBS.
 	// We loop backwards to ensure scenes are created in the correct order in the OBS UI.
