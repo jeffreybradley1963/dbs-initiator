@@ -16,6 +16,7 @@ import (
 type OBSClient interface {
 	CreateTextScene(sceneName, text string) error
 	CreateImageScene(sceneName, imageFilePath string) error
+	UpdateTextInput(inputName, text string) error
 	SetCurrentScene(sceneName string)
 	Disconnect() error
 }
@@ -123,6 +124,19 @@ func (c *clientImpl) createSceneFromTemplate(sceneName, templateSceneName, templ
 
 	log.Printf("Successfully created/updated scene '%s'", sceneName)
 	return err
+}
+
+// UpdateTextInput updates the text content of a specific input source.
+func (c *clientImpl) UpdateTextInput(inputName, text string) error {
+	log.Printf("Updating text input '%s'...", inputName)
+	_, err := c.Inputs.SetInputSettings(&inputs.SetInputSettingsParams{
+		InputName:     &inputName,
+		InputSettings: map[string]interface{}{"text": text},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to update text input '%s': %w", inputName, err)
+	}
+	return nil
 }
 
 // SetCurrentScene makes the given scene the active program scene.

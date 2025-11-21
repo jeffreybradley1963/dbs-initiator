@@ -128,7 +128,7 @@ func TestFetchVerses(t *testing.T) {
 	}
 
 	// 4. Call the function we are testing.
-	verses, rawText, err := FetchVerses(ref)
+	verses, rawText, title, err := FetchVerses(ref)
 
 	// 5. Assert the results.
 	if err != nil {
@@ -137,6 +137,11 @@ func TestFetchVerses(t *testing.T) {
 
 	if len(verses) != 1 {
 		t.Fatalf("Expected 1 verse, but got %d", len(verses))
+	}
+
+	// We didn't put a heading in the mock response, so title should be empty
+	if title != "" {
+		t.Errorf("Expected empty title, but got '%s'", title)
 	}
 
 	expectedText := "[16] For God so loved the world..."
