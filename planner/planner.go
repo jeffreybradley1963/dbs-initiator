@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -15,22 +16,43 @@ const (
 	StatusComplete  Status = "Complete"
 )
 
+type GeneratedImage struct {
+	Filename    string `json:"filename"`
+	VerseRange  string `json:"verse_range"`
+	Description string `json:"description"`
+}
+
 type StudyItem struct {
-	Reference string    `json:"reference"`
-	Title     string    `json:"title,omitempty"`
-	Status    Status    `json:"status"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Reference       string           `json:"reference"`
+	Title           string           `json:"title,omitempty"`
+	Status          Status           `json:"status"`
+	GeneratedImages []GeneratedImage `json:"generated_images,omitempty"`
+	CreatedAt       time.Time        `json:"created_at"`
+	UpdatedAt       time.Time        `json:"updated_at"`
 }
 
 type StudyPlan struct {
 	Items []StudyItem `json:"items"`
 }
 
+const planDirName = ".dbs-initiator"
 const planFileName = "study_plan.json"
 
+func getPlanPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("could not find home directory: %w", err)
+	}
+	return filepath.Join(home, planDirName, planFileName), nil
+}
+
 func Load() (*StudyPlan, error) {
-	file, err := os.ReadFile(planFileName)
+	path, err := getPlanPath()
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
 		return &StudyPlan{Items: []StudyItem{}}, nil
 	}
@@ -46,11 +68,22 @@ func Load() (*StudyPlan, error) {
 }
 
 func (p *StudyPlan) Save() error {
+	path, err := getPlanPath()
+	if err != nil {
+		return err
+	}
+
+	// Ensure directory exists
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create config directory: %w", err)
+	}
+
 	data, err := json.MarshalIndent(p, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(planFileName, data, 0644)
+	return os.WriteFile(path, data, 0644)
 }
 
 func (p *StudyPlan) Add(reference string) error {
@@ -90,6 +123,17 @@ func (p *StudyPlan) UpdateTitle(reference, title string) error {
 	for i, item := range p.Items {
 		if item.Reference == reference {
 			p.Items[i].Title = title
+			p.Items[i].UpdatedAt = time.Now()
+			return p.Save()
+		}
+	}
+	return fmt.Errorf("reference '%s' not found in plan", reference)
+}
+
+func (p *StudyPlan) UpdateImages(reference string, images []GeneratedImage) error {
+	for i, item := range p.Items {
+		if item.Reference == reference {
+			p.Items[i].GeneratedImages = images
 			p.Items[i].UpdatedAt = time.Now()
 			return p.Save()
 		}

@@ -84,9 +84,19 @@ func handlePlanCommand() {
 			return
 		}
 		fmt.Printf("%-30s %-15s %s\n", "Reference", "Status", "Created At")
-		fmt.Println(strings.Repeat("-", 60))
+		fmt.Println(strings.Repeat("-", 80))
 		for _, item := range items {
 			fmt.Printf("%-30s %-15s %s\n", item.Reference, item.Status, item.CreatedAt.Format("2006-01-02 15:04"))
+			if item.Title != "" {
+				fmt.Printf("  Title: %s\n", item.Title)
+			}
+			if len(item.GeneratedImages) > 0 {
+				fmt.Println("  Generated Images:")
+				for _, img := range item.GeneratedImages {
+					fmt.Printf("    - %s (Verses %s): %s\n", img.Filename, img.VerseRange, img.Description)
+				}
+			}
+			fmt.Println()
 		}
 
 	case "next":
@@ -100,6 +110,13 @@ func handlePlanCommand() {
 		if err != nil {
 			log.Fatalf("Failed to process scripture: %v", err)
 		}
+
+		// Reload plan to get latest state (images, title) before updating status
+		plan, err = planner.Load()
+		if err != nil {
+			log.Fatalf("Failed to reload plan: %v", err)
+		}
+
 		// Update status to Processed
 		if err := plan.UpdateStatus(next.Reference, planner.StatusProcessed); err != nil {
 			log.Printf("Warning: Failed to update status for %s: %v", next.Reference, err)
@@ -139,6 +156,16 @@ func updatePlannerTitle(ref string, title string) {
 	}
 	if err := plan.UpdateTitle(ref, title); err == nil {
 		log.Printf("Updated title of '%s' to '%s' in plan.", ref, title)
+	}
+}
+
+func updatePlannerImages(ref string, images []planner.GeneratedImage) {
+	plan, err := planner.Load()
+	if err != nil {
+		return
+	}
+	if err := plan.UpdateImages(ref, images); err == nil {
+		log.Printf("Updated images for '%s' in plan.", ref)
 	}
 }
 
@@ -217,6 +244,8 @@ func processScripture(ctx context.Context, refStr string) error {
 		return fmt.Errorf("failed to create output directory '%s': %w", outputDir, err)
 	}
 
+	var generatedImages []planner.GeneratedImage
+
 	// 7. Generate images and create scenes in OBS.
 	for i, prompt := range imagePrompts {
 		log.Printf("Generating image %d of %d for verses %s: %s", i+1, len(imagePrompts), prompt.VerseRange, prompt.Description)
@@ -238,6 +267,13 @@ func processScripture(ctx context.Context, refStr string) error {
 		}
 		log.Printf("Successfully saved image to %s", imageFilePath)
 
+		// Track the image for the planner
+		generatedImages = append(generatedImages, planner.GeneratedImage{
+			Filename:    imageFileName,
+			VerseRange:  prompt.VerseRange,
+			Description: prompt.Description,
+		})
+
 		// Get the absolute path to pass to OBS.
 		absImageFilePath, err := filepath.Abs(imageFilePath)
 		if err != nil {
@@ -251,6 +287,11 @@ func processScripture(ctx context.Context, refStr string) error {
 		if err != nil {
 			log.Printf("Warning: could not create OBS image scene for '%s': %v", prompt.Description, err)
 		}
+	}
+
+	// Save generated images to planner
+	if len(generatedImages) > 0 {
+		updatePlannerImages(refStr, generatedImages)
 	}
 
 	return nil
