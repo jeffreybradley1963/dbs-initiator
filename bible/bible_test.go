@@ -105,7 +105,7 @@ func TestFetchVerses(t *testing.T) {
 				"number": "3",
 				"content": [
 					{"type": "verse", "number": 16, "content": ["For God so loved the world..."]},
-					{"type": "verse", "number": 17, "content": ["For God did not send His Son..."]}
+					{"type": "verse", "number": 17, "content": ["For God did not send His Son...", " but to save the world."]}
 				]
 			}
 		}`)
@@ -123,8 +123,8 @@ func TestFetchVerses(t *testing.T) {
 	ref := Reference{
 		Book:       "John",
 		Chapter:    3,
-		StartVerse: 16,
-		EndVerse:   16, // We only want the first verse.
+		StartVerse: 17,
+		EndVerse:   17, // We test the split verse
 	}
 
 	// 4. Call the function we are testing.
@@ -144,9 +144,12 @@ func TestFetchVerses(t *testing.T) {
 		t.Errorf("Expected empty title, but got '%s'", title)
 	}
 
-	expectedText := "[16] For God so loved the world..."
+	expectedText := "[17] For God did not send His Son... but to save the world."
 	if verses[0].Text != expectedText {
 		t.Errorf("Expected verse text '%s', but got '%s'", expectedText, verses[0].Text)
+	}
+	if rawText != expectedText {
+		t.Errorf("Expected raw text '%s', but got '%s'", expectedText, rawText)
 	}
 	if rawText != expectedText {
 		t.Errorf("Expected raw text '%s', but got '%s'", expectedText, rawText)

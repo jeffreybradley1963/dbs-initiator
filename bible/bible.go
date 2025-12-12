@@ -150,8 +150,15 @@ func FetchVerses(ref Reference) ([]Verse, string, string, error) {
 				title = currentHeading
 			}
 
-			verseTextContent, ok := item.Content[0].(string)
-			if !ok {
+			var verseParts []string
+			for _, contentItem := range item.Content {
+				if str, ok := contentItem.(string); ok {
+					verseParts = append(verseParts, str)
+				}
+			}
+			verseTextContent := strings.Join(verseParts, "")
+
+			if verseTextContent == "" {
 				continue
 			}
 
